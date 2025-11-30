@@ -2,29 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Interactive Circuit Simulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Global Reset & Mobile Optimization */
+        :root {
+            touch-action: pan-x pan-y;
+        }
+        
         body {
-            background-color: #111827; /* Gray 900 */
+            background-color: #111827;
             color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden; /* Prevent body scroll */
-            touch-action: none; /* Prevent pinch zoom */
-            user-select: none; /* Prevent text selection on double tap */
-            /* Critical for mobile browsers to handle address bar correctly */
-            height: 100dvh; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            /* Critical: Use 100dvh to handle mobile browser bars correctly */
+            height: 100dvh;
             width: 100vw;
+            overflow: hidden; /* Prevent entire page scroll */
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        #canvas-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
+        /* Canvas Handling */
         canvas {
             display: block;
             touch-action: none;
@@ -35,14 +34,9 @@
             -webkit-appearance: none;
             width: 100%;
             background: transparent;
-            padding: 10px 0; /* Increase touch target */
+            padding: 10px 0;
         }
-        
-        input[type=range]:focus {
-            outline: none;
-        }
-
-        /* Slider Track */
+        input[type=range]:focus { outline: none; }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
             height: 6px;
@@ -50,126 +44,86 @@
             background: #4b5563;
             border-radius: 3px;
         }
-        
-        /* Slider Thumb */
         input[type=range]::-webkit-slider-thumb {
             height: 24px;
             width: 24px;
             border-radius: 50%;
-            background: #60a5fa; /* Blue 400 */
+            background: #60a5fa;
             cursor: pointer;
             -webkit-appearance: none;
-            margin-top: -9px; /* Center on track */
+            margin-top: -9px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             border: 2px solid white;
         }
 
-        /* Firefox specific */
-        input[type=range]::-moz-range-track {
-            width: 100%;
-            height: 6px;
-            cursor: pointer;
-            background: #4b5563;
-            border-radius: 3px;
-        }
-        input[type=range]::-moz-range-thumb {
-            height: 24px;
-            width: 24px;
-            border: 2px solid white;
-            border-radius: 50%;
-            background: #60a5fa;
-            cursor: pointer;
-        }
-
+        /* Glass Panel for Footer */
         .glass-panel {
             background: rgba(31, 41, 55, 0.95);
             backdrop-filter: blur(12px);
             border-top: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+            /* Handle iPhone X+ safe area */
+            padding-bottom: env(safe-area-inset-bottom, 20px);
         }
 
         .mode-btn.active-mode {
-            background-color: #2563eb; /* Blue 600 */
+            background-color: #2563eb;
             color: white;
             border-color: #60a5fa;
             box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
         }
 
-        /* Faiz Sir Logo Animation */
+        /* Logo Animation */
         @keyframes faiz-anim {
-            0% { 
-                transform: translateY(0) rotate(-3deg); 
-                border-color: #ef4444; /* Red */
-                box-shadow: 0 0 8px #ef4444;
-            }
-            25% { 
-                transform: translateY(-4px) rotate(3deg); 
-                border-color: #eab308; /* Yellow */
-                box-shadow: 0 0 8px #eab308;
-            }
-            50% { 
-                transform: translateY(0) rotate(-3deg); 
-                border-color: #22c55e; /* Green */
-                box-shadow: 0 0 8px #22c55e;
-            }
-            75% { 
-                transform: translateY(-4px) rotate(3deg); 
-                border-color: #3b82f6; /* Blue */
-                box-shadow: 0 0 8px #3b82f6;
-            }
-            100% { 
-                transform: translateY(0) rotate(-3deg); 
-                border-color: #a855f7; /* Purple */
-                box-shadow: 0 0 8px #a855f7;
-            }
+            0% { transform: translateY(0) rotate(-3deg); border-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
+            25% { transform: translateY(-4px) rotate(3deg); border-color: #eab308; box-shadow: 0 0 8px #eab308; }
+            50% { transform: translateY(0) rotate(-3deg); border-color: #22c55e; box-shadow: 0 0 8px #22c55e; }
+            75% { transform: translateY(-4px) rotate(3deg); border-color: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
+            100% { transform: translateY(0) rotate(-3deg); border-color: #a855f7; box-shadow: 0 0 8px #a855f7; }
         }
-        
-        .faiz-logo {
-            animation: faiz-anim 3s linear infinite;
-        }
+        .faiz-logo { animation: faiz-anim 3s linear infinite; }
     </style>
 </head>
+
+<!-- Layout: Flex Column with Fixed Header/Footer -->
 <body class="flex flex-col">
 
-    <!-- Header -->
-    <header class="flex-none p-3 bg-gray-900 shadow-lg border-b border-gray-800 z-10 flex justify-between items-center h-16">
+    <!-- 1. HEADER (Fixed Height) -->
+    <header class="flex-none h-16 px-4 bg-gray-900 shadow-lg border-b border-gray-800 z-10 flex justify-between items-center">
         <div class="flex items-center">
-            <!-- Updated Image Tag: Larger size, object-top for face visibility, dynamic border -->
             <img src="https://raw.githubusercontent.com/faizabdii123/Image/f22a685a540a28515b38b320ee982675e7087236/1763968977259.jpg" 
-                 class="w-12 h-12 rounded-full mr-3 border-4 faiz-logo object-cover object-top" 
+                 class="w-10 h-10 rounded-full mr-3 border-2 faiz-logo object-cover object-top" 
                  alt="Faiz Sir Logo">
             <div class="flex flex-col justify-center">
-                <h1 class="text-base font-bold text-blue-400 leading-tight">Physics Lab with Faiz Sir</h1>
-                <p class="text-[10px] text-gray-400 uppercase tracking-wider">Circuit Simulator</p>
+                <h1 class="text-sm font-bold text-blue-400 leading-tight">Physics Lab</h1>
+                <p class="text-[10px] text-gray-400 uppercase tracking-wider">With Faiz Sir</p>
             </div>
         </div>
-        <!-- Status Indicator (Top Right) -->
-        <div id="statusBadge" class="px-3 py-1 rounded-full text-xs font-mono font-bold bg-red-900/50 text-red-400 border border-red-800 transition-colors duration-300">
+        <div id="statusBadge" class="px-2 py-1 rounded-full text-[10px] font-mono font-bold bg-red-900/50 text-red-400 border border-red-800 transition-colors duration-300">
             OPEN
         </div>
     </header>
 
-    <!-- Main Canvas Area -->
-    <main class="flex-grow relative bg-gray-900 w-full overflow-hidden" id="canvas-wrapper">
-        <canvas id="circuitCanvas"></canvas>
+    <!-- 2. MAIN CANVAS (Flex Grow - Takes remaining space) -->
+    <!-- min-h-0 is crucial: allows this container to shrink below its content size to prevent overflow -->
+    <main class="flex-1 min-h-0 relative w-full bg-gray-900" id="canvas-wrapper">
+        <canvas id="circuitCanvas" class="block outline-none"></canvas>
     </main>
 
-    <!-- Controls (Bottom Sheet) -->
-    <section class="flex-none glass-panel p-4 pb-8 z-20 transition-all duration-300 w-full">
-        <div class="max-w-3xl mx-auto flex flex-col gap-4">
+    <!-- 3. FOOTER CONTROLS (Fixed Height / Shrink-wrapped) -->
+    <section class="flex-none glass-panel z-20 w-full px-4 pt-4">
+        <div class="max-w-3xl mx-auto flex flex-col gap-3 pb-2">
             
             <!-- Row 1: Power & Speed -->
-            <div class="flex items-center gap-4">
-                <!-- Big Power Button -->
+            <div class="flex items-center gap-3">
                 <button id="toggleSwitchBtn" class="flex-none w-20 h-14 bg-red-600 active:scale-95 text-white font-bold rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center border-b-4 border-red-800 active:border-0 active:translate-y-1 touch-manipulation">
-                    <span class="text-xs opacity-75">POWER</span>
-                    <span class="text-lg">OFF</span>
+                    <span class="text-[10px] opacity-75">POWER</span>
+                    <span class="text-lg leading-none mt-1">OFF</span>
                 </button>
                 
-                <!-- Speed Slider -->
-                <div class="flex-grow flex flex-col justify-center bg-gray-800/50 p-3 rounded-xl border border-gray-700">
-                    <div class="flex justify-between text-xs text-gray-400 mb-2 font-mono">
-                        <span>CURRENT</span>
+                <div class="flex-grow flex flex-col justify-center bg-gray-800/50 px-3 py-2 rounded-xl border border-gray-700 h-14">
+                    <div class="flex justify-between text-[10px] text-gray-400 mb-1 font-mono">
+                        <span>CURRENT SPEED</span>
                         <span id="currentVal" class="text-blue-300">1.0x</span>
                     </div>
                     <input type="range" id="currentSlider" min="0.5" max="5" step="0.5" value="1" class="touch-manipulation">
@@ -177,14 +131,14 @@
             </div>
 
             <!-- Row 2: Mode Selection -->
-            <div class="grid grid-cols-3 gap-3">
-                <button onclick="setMode('simple')" class="mode-btn bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-lg text-sm font-semibold transition-all duration-200 border border-transparent active:scale-95 touch-manipulation" id="btn-simple">
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="setMode('simple')" class="mode-btn bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-lg text-xs font-bold uppercase tracking-wide transition-all duration-200 border border-transparent active:scale-95 touch-manipulation" id="btn-simple">
                     Simple
                 </button>
-                <button onclick="setMode('series')" class="mode-btn bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-lg text-sm font-semibold transition-all duration-200 border border-transparent active:scale-95 touch-manipulation" id="btn-series">
+                <button onclick="setMode('series')" class="mode-btn bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-lg text-xs font-bold uppercase tracking-wide transition-all duration-200 border border-transparent active:scale-95 touch-manipulation" id="btn-series">
                     Series
                 </button>
-                <button onclick="setMode('parallel')" class="mode-btn bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-lg text-sm font-semibold transition-all duration-200 border border-transparent active:scale-95 touch-manipulation" id="btn-parallel">
+                <button onclick="setMode('parallel')" class="mode-btn bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-lg text-xs font-bold uppercase tracking-wide transition-all duration-200 border border-transparent active:scale-95 touch-manipulation" id="btn-parallel">
                     Parallel
                 </button>
             </div>
@@ -192,14 +146,9 @@
     </section>
 
 <script>
-    /**
-     * Configuration & State
-     */
     const canvas = document.getElementById('circuitCanvas');
     const ctx = canvas.getContext('2d');
     const wrapper = document.getElementById('canvas-wrapper');
-    
-    // UI Elements
     const switchBtn = document.getElementById('toggleSwitchBtn');
     const currentSlider = document.getElementById('currentSlider');
     const currentValLabel = document.getElementById('currentVal');
@@ -207,62 +156,45 @@
     const modeBtns = document.querySelectorAll('.mode-btn');
 
     let state = {
-        mode: 'simple', // simple, series, parallel
+        mode: 'simple', 
         isSwitchClosed: false,
-        currentSpeed: 1, // Base speed multiplier
-        width: 0, // Logical width
-        height: 0, // Logical height
+        currentSpeed: 1, 
+        width: 0, 
+        height: 0, 
         electrons: []
     };
 
-    /**
-     * High DPI Canvas Handling & Responsiveness
-     */
+    // --- Resizing Logic (Crucial for Mobile) ---
     function resizeCanvas() {
         const dpr = window.devicePixelRatio || 1;
-        // Use clientWidth/Height to get exact pixel size of the wrapper
-        const width = wrapper.clientWidth;
-        const height = wrapper.clientHeight;
+        const rect = wrapper.getBoundingClientRect();
+        
+        // Logical size matches the container exactly
+        state.width = rect.width;
+        state.height = rect.height;
 
-        if (width === 0 || height === 0) return;
+        // Physical size scales for high DPI
+        canvas.width = state.width * dpr;
+        canvas.height = state.height * dpr;
 
-        // Set the physical size (scaling for Retina/HighDPI)
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
+        // CSS size matches logical size
+        canvas.style.width = `${state.width}px`;
+        canvas.style.height = `${state.height}px`;
 
-        // Set the CSS size to match the wrapper
-        canvas.style.width = `${width}px`;
-        canvas.style.height = `${height}px`;
-
-        // Scale the context so drawing coordinates remain logical
         ctx.scale(dpr, dpr);
-
-        // Update state logic
-        state.width = width;
-        state.height = height;
-
         initElectrons();
     }
     
+    // Resize immediately and on window change
     window.addEventListener('resize', resizeCanvas);
-    // Call shortly after load to ensure layout is settled
-    setTimeout(resizeCanvas, 100);
-    // Double check for mobile address bar movements
-    setInterval(() => {
-        if (state.width !== wrapper.clientWidth || state.height !== wrapper.clientHeight) {
-            resizeCanvas();
-        }
-    }, 1000);
+    setTimeout(resizeCanvas, 50);
 
-    /**
-     * Logic Controller
-     */
+    // --- Core Logic ---
     function toggleSwitch() {
         state.isSwitchClosed = !state.isSwitchClosed;
         updateUI();
     }
 
-    // Expose to window for HTML buttons
     window.setMode = function(mode) {
         state.mode = mode;
         initElectrons();
@@ -270,28 +202,21 @@
     };
 
     function updateUI() {
-        // Switch Button Style
         if (state.isSwitchClosed) {
             switchBtn.querySelector('span:last-child').textContent = "ON";
             switchBtn.className = "flex-none w-20 h-14 bg-green-600 active:scale-95 text-white font-bold rounded-xl shadow-[0_0_15px_rgba(22,163,74,0.6)] transition-all duration-200 flex flex-col items-center justify-center border-b-4 border-green-800 active:border-0 active:translate-y-1 touch-manipulation";
-            
             statusBadge.textContent = "CLOSED";
-            statusBadge.className = "px-3 py-1 rounded-full text-xs font-mono font-bold bg-green-900/50 text-green-400 border border-green-800 transition-colors duration-300 shadow-[0_0_10px_rgba(74,222,128,0.2)]";
+            statusBadge.className = "px-2 py-1 rounded-full text-[10px] font-mono font-bold bg-green-900/50 text-green-400 border border-green-800 transition-colors duration-300 shadow-[0_0_10px_rgba(74,222,128,0.2)]";
         } else {
             switchBtn.querySelector('span:last-child').textContent = "OFF";
             switchBtn.className = "flex-none w-20 h-14 bg-red-600 active:scale-95 text-white font-bold rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center border-b-4 border-red-800 active:border-0 active:translate-y-1 touch-manipulation";
-            
             statusBadge.textContent = "OPEN";
-            statusBadge.className = "px-3 py-1 rounded-full text-xs font-mono font-bold bg-red-900/50 text-red-400 border border-red-800 transition-colors duration-300";
+            statusBadge.className = "px-2 py-1 rounded-full text-[10px] font-mono font-bold bg-red-900/50 text-red-400 border border-red-800 transition-colors duration-300";
         }
 
-        // Mode Buttons Style
         modeBtns.forEach(btn => {
-            if(btn.id === `btn-${state.mode}`) {
-                btn.classList.add('active-mode');
-            } else {
-                btn.classList.remove('active-mode');
-            }
+            if(btn.id === `btn-${state.mode}`) btn.classList.add('active-mode');
+            else btn.classList.remove('active-mode');
         });
     }
 
@@ -301,56 +226,56 @@
     });
     switchBtn.addEventListener('click', toggleSwitch);
 
-    /**
-     * Electron Particle System
-     */
+    // --- Physics Engine ---
     function initElectrons() {
         state.electrons = [];
         const count = 30; 
         for(let i=0; i<count; i++) {
-            state.electrons.push({
-                offset: i * (1/count), 
-                loop: 0 
-            });
+            state.electrons.push({ offset: i * (1/count), loop: 0 });
         }
         if(state.mode === 'parallel') {
             for(let i=0; i<count; i++) {
-                state.electrons.push({
-                    offset: i * (1/count),
-                    loop: 1 
-                });
+                state.electrons.push({ offset: i * (1/count), loop: 1 });
             }
         }
     }
 
-    // Time-based animation variables
     let lastTime = 0;
+    function animate(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        const deltaTime = timestamp - lastTime;
+        lastTime = timestamp;
 
-    function updateElectrons(deltaTime) {
-        if (!state.isSwitchClosed) return;
-
-        let modeMultiplier = 1;
-        if (state.mode === 'series') modeMultiplier = 0.5;
-
-        // Adjust speed based on time delta (consistent on 60hz vs 120hz)
-        // Standardizing to roughly 60fps behavior
-        const timeFactor = deltaTime / 16.66; 
-
-        const speed = 0.005 * state.currentSpeed * modeMultiplier * timeFactor;
+        // Clear using logical size
+        ctx.clearRect(0, 0, state.width, state.height);
         
+        const r = getRect();
+        drawCircuit(r);
+        
+        // Physics update
+        if (state.isSwitchClosed) {
+            let modeMultiplier = state.mode === 'series' ? 0.5 : 1;
+            const speed = 0.005 * state.currentSpeed * modeMultiplier * (deltaTime / 16.66);
+            
+            state.electrons.forEach(p => {
+                p.offset += speed;
+                if (p.offset > 1) p.offset -= 1;
+            });
+        }
+
+        // Render Electrons
         state.electrons.forEach(p => {
-            p.offset += speed;
-            if (p.offset > 1) p.offset -= 1;
+            const pos = getPositionOnRect(p.offset, r, p.loop);
+            const distBat = Math.hypot(pos.x - r.x, pos.y - (r.y + r.h/2));
+            const distSw = Math.hypot(pos.x - (r.x + r.w/4), pos.y - r.y);
+            if (distBat > 30 && distSw > 30) drawElectronParticle(ctx, pos.x, pos.y);
         });
+
+        requestAnimationFrame(animate);
     }
 
-    /**
-     * Drawing Helpers
-     */
     function getRect() {
-        // Responsive padding
         const padding = Math.min(state.width, state.height) * 0.1;
-        // Ensure the circuit doesn't look too small on large screens, or too big on small ones
         const w = Math.min(600, state.width - padding * 2);
         const h = Math.min(400, state.height - padding * 2);
         const x = (state.width - w) / 2;
@@ -358,245 +283,109 @@
         return { x, y, w, h };
     }
 
-    function drawBattery(ctx, x, y, vertical = true) {
-        ctx.save();
-        ctx.translate(x, y);
-        if (!vertical) ctx.rotate(-Math.PI / 2);
-        
-        ctx.strokeStyle = '#9ca3af';
-        ctx.lineWidth = 4;
-        
-        // Wire ends
-        ctx.beginPath();
-        ctx.moveTo(0, -30);
-        ctx.lineTo(0, -10);
-        ctx.moveTo(0, 30);
-        ctx.lineTo(0, 10);
-        ctx.stroke();
+    function drawCircuit(r) {
+        // Wires
+        drawWire(r.x, r.y, r.x, r.y + r.h); 
+        drawWire(r.x, r.y, r.x + r.w, r.y); 
+        drawWire(r.x + r.w, r.y, r.x + r.w, r.y + r.h); 
+        drawWire(r.x, r.y + r.h, r.x + r.w, r.y + r.h); 
+        if (state.mode === 'parallel') drawWire(r.x + r.w/2, r.y, r.x + r.w/2, r.y + r.h);
 
-        // Plates
-        ctx.beginPath();
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = '#e5e7eb';
-        ctx.moveTo(-20, -10); // Long plate (Positive)
-        ctx.lineTo(20, -10);
-        ctx.stroke();
+        // Components
+        ctx.clearRect(r.x - 10, r.y + r.h/2 - 35, 20, 70); 
+        drawBattery(r.x, r.y + r.h/2);
 
-        ctx.beginPath();
-        ctx.lineWidth = 8; 
-        ctx.strokeStyle = '#4b5563';
-        ctx.moveTo(-10, 10); // Short plate (Negative)
-        ctx.lineTo(10, 10);
-        ctx.stroke();
+        ctx.clearRect(r.x + r.w/4 - 30, r.y - 10, 60, 20); 
+        drawSwitch(r.x + r.w/4, r.y, state.isSwitchClosed);
 
-        // Signs
-        ctx.font = 'bold 20px monospace';
-        ctx.fillStyle = '#4ade80';
-        ctx.fillText('+', 25, -5);
-        ctx.fillStyle = '#f87171';
-        ctx.fillText('-', 25, 20);
-
-        ctx.restore();
-    }
-
-    function drawBulb(ctx, x, y, isOn, brightness = 1.0) {
-        ctx.save();
-        
-        if (isOn) {
-            const glowSize = 30 * state.currentSpeed * brightness;
-            const grad = ctx.createRadialGradient(x, y, 5, x, y, glowSize);
-            grad.addColorStop(0, `rgba(255, 255, 200, ${0.9 * brightness})`);
-            grad.addColorStop(1, 'rgba(255, 255, 0, 0)');
-            
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(x, y, glowSize, 0, Math.PI * 2);
-            ctx.fill();
+        const isPowered = state.isSwitchClosed;
+        if (state.mode === 'simple') {
+            ctx.clearRect(r.x + r.w - 10, r.y + r.h/2 - 25, 20, 50);
+            drawBulb(r.x + r.w, r.y + r.h/2, isPowered, 1.0);
+        } else if (state.mode === 'series') {
+            ctx.clearRect(r.x + r.w - 10, r.y + r.h/3 - 25, 20, 50);
+            drawBulb(r.x + r.w, r.y + r.h/3, isPowered, 0.5); 
+            ctx.clearRect(r.x + r.w - 10, r.y + (r.h/3)*2 - 25, 20, 50);
+            drawBulb(r.x + r.w, r.y + (r.h/3)*2, isPowered, 0.5); 
+        } else if (state.mode === 'parallel') {
+            ctx.clearRect(r.x + r.w/2 - 10, r.y + r.h/2 - 25, 20, 50);
+            drawBulb(r.x + r.w/2, r.y + r.h/2, isPowered, 1.0);
+            ctx.clearRect(r.x + r.w - 10, r.y + r.h/2 - 25, 20, 50);
+            drawBulb(r.x + r.w, r.y + r.h/2, isPowered, 1.0);
         }
-
-        // Glass Bulb
-        ctx.beginPath();
-        ctx.arc(x, y, 18, 0, Math.PI * 2);
-        ctx.fillStyle = isOn ? `rgba(255, 255, 200, ${0.2 + (0.8 * brightness)})` : 'rgba(50,50,50,0.5)';
-        ctx.strokeStyle = '#9ca3af';
-        ctx.lineWidth = 2;
-        ctx.fill();
-        ctx.stroke();
-
-        // Filament
-        ctx.beginPath();
-        ctx.moveTo(x - 6, y + 12);
-        ctx.lineTo(x - 6, y - 6);
-        ctx.lineTo(x, y - 12); 
-        ctx.lineTo(x + 6, y - 6); 
-        ctx.lineTo(x + 6, y + 12);
-        ctx.strokeStyle = isOn ? '#fbbf24' : '#4b5563';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Base
-        ctx.fillStyle = '#6b7280';
-        ctx.fillRect(x - 8, y + 14, 16, 10);
-
-        ctx.restore();
     }
 
-    function drawSwitch(ctx, x, y, isClosed) {
-        ctx.save();
-        ctx.strokeStyle = '#e5e7eb';
-        ctx.lineWidth = 4;
-        
-        ctx.beginPath();
-        ctx.arc(x - 25, y, 5, 0, Math.PI * 2);
-        ctx.arc(x + 25, y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = '#e5e7eb';
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(x - 25, y);
-        if (isClosed) {
-            ctx.lineTo(x + 25, y);
-        } else {
-            ctx.lineTo(x + 15, y - 25); 
-        }
-        ctx.lineCap = 'round';
-        ctx.stroke();
-        
-        ctx.restore();
-    }
-
-    function drawWire(ctx, x1, y1, x2, y2) {
+    // --- Drawing Primitives ---
+    function drawWire(x1, y1, x2, y2) {
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.strokeStyle = '#4b5563'; 
         ctx.lineWidth = 6;
         ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
         ctx.stroke();
     }
 
+    function drawBattery(x, y) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(-Math.PI / 2);
+        ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(0, -10); ctx.moveTo(0, 30); ctx.lineTo(0, 10); ctx.stroke();
+        ctx.beginPath(); ctx.lineWidth = 4; ctx.strokeStyle = '#e5e7eb'; ctx.moveTo(-20, -10); ctx.lineTo(20, -10); ctx.stroke();
+        ctx.beginPath(); ctx.lineWidth = 8; ctx.strokeStyle = '#4b5563'; ctx.moveTo(-10, 10); ctx.lineTo(10, 10); ctx.stroke();
+        ctx.font = 'bold 20px monospace'; ctx.fillStyle = '#4ade80'; ctx.fillText('+', 25, -5); ctx.fillStyle = '#f87171'; ctx.fillText('-', 25, 20);
+        ctx.restore();
+    }
+
+    function drawSwitch(x, y, isClosed) {
+        ctx.save();
+        ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(x - 25, y, 5, 0, Math.PI * 2); ctx.arc(x + 25, y, 5, 0, Math.PI * 2); ctx.fillStyle = '#e5e7eb'; ctx.fill();
+        ctx.beginPath(); ctx.moveTo(x - 25, y);
+        if (isClosed) ctx.lineTo(x + 25, y); else ctx.lineTo(x + 15, y - 25);
+        ctx.stroke(); ctx.restore();
+    }
+
+    function drawBulb(x, y, isOn, brightness) {
+        ctx.save();
+        if (isOn) {
+            const glowSize = 30 * state.currentSpeed * brightness;
+            const grad = ctx.createRadialGradient(x, y, 5, x, y, glowSize);
+            grad.addColorStop(0, `rgba(255, 255, 200, ${0.9 * brightness})`);
+            grad.addColorStop(1, 'rgba(255, 255, 0, 0)');
+            ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(x, y, glowSize, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI * 2);
+        ctx.fillStyle = isOn ? `rgba(255, 255, 200, ${0.2 + (0.8 * brightness)})` : 'rgba(50,50,50,0.5)';
+        ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 2; ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x-6, y+12); ctx.lineTo(x-6, y-6); ctx.lineTo(x, y-12); ctx.lineTo(x+6, y-6); ctx.lineTo(x+6, y+12);
+        ctx.strokeStyle = isOn ? '#fbbf24' : '#4b5563'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = '#6b7280'; ctx.fillRect(x - 8, y + 14, 16, 10); ctx.restore();
+    }
+
     function drawElectronParticle(ctx, x, y) {
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = '#fbbf24'; 
-        ctx.shadowColor = '#fbbf24';
-        ctx.shadowBlur = 4;
-        ctx.fill();
-        ctx.shadowBlur = 0;
+        ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#fbbf24'; ctx.shadowColor = '#fbbf24'; ctx.shadowBlur = 4; ctx.fill(); ctx.shadowBlur = 0;
     }
 
-    function getPositionOnRect(progress, r, loopType = 0) {
-        let p = progress;
-        
-        const tl = {x: r.x, y: r.y};
-        const tr = {x: r.x + r.w, y: r.y};
-        const br = {x: r.x + r.w, y: r.y + r.h};
-        const bl = {x: r.x, y: r.y + r.h};
-
-        const tm = {x: r.x + r.w/2, y: r.y};
-        const bm = {x: r.x + r.w/2, y: r.y + r.h};
-
+    function getPositionOnRect(p, r, loopType) {
+        const tl = {x: r.x, y: r.y}; const tr = {x: r.x + r.w, y: r.y};
+        const br = {x: r.x + r.w, y: r.y + r.h}; const bl = {x: r.x, y: r.y + r.h};
+        const tm = {x: r.x + r.w/2, y: r.y}; const bm = {x: r.x + r.w/2, y: r.y + r.h};
         if (state.mode === 'parallel' && loopType === 1) {
-            if (p < 0.25) { 
-                const local = p / 0.25; 
-                return { x: bl.x, y: bl.y - (local * r.h) };
-            } else if (p < 0.5) { 
-                const local = (p - 0.25) / 0.25;
-                return { x: tl.x + (local * (r.w/2)), y: tl.y };
-            } else if (p < 0.75) { 
-                const local = (p - 0.5) / 0.25;
-                return { x: tm.x, y: tm.y + (local * r.h) };
-            } else { 
-                const local = (p - 0.75) / 0.25;
-                return { x: bm.x - (local * (r.w/2)), y: bm.y };
-            }
+            if (p < 0.25) return { x: bl.x, y: bl.y - ((p/0.25) * r.h) };
+            if (p < 0.5) return { x: tl.x + (((p-0.25)/0.25) * (r.w/2)), y: tl.y };
+            if (p < 0.75) return { x: tm.x, y: tm.y + (((p-0.5)/0.25) * r.h) };
+            return { x: bm.x - (((p-0.75)/0.25) * (r.w/2)), y: bm.y };
         }
-
-        if (p < 0.25) {
-            const local = p / 0.25;
-            return { x: bl.x, y: bl.y - (local * r.h) };
-        } else if (p < 0.5) {
-            const local = (p - 0.25) / 0.25;
-            return { x: tl.x + (local * r.w), y: tl.y };
-        } else if (p < 0.75) {
-            const local = (p - 0.5) / 0.25;
-            return { x: tr.x, y: tr.y + (local * r.h) };
-        } else {
-            const local = (p - 0.75) / 0.25;
-            return { x: br.x - (local * r.w), y: br.y };
-        }
+        if (p < 0.25) return { x: bl.x, y: bl.y - ((p/0.25) * r.h) };
+        if (p < 0.5) return { x: tl.x + (((p-0.25)/0.25) * r.w), y: tl.y };
+        if (p < 0.75) return { x: tr.x, y: tr.y + (((p-0.5)/0.25) * r.h) };
+        return { x: br.x - (((p-0.75)/0.25) * r.w), y: br.y };
     }
 
-    /**
-     * Main Animation Loop
-     */
-    function animate(timestamp) {
-        if (!lastTime) lastTime = timestamp;
-        const deltaTime = timestamp - lastTime;
-        lastTime = timestamp;
-
-        ctx.clearRect(0, 0, state.width, state.height);
-        
-        const r = getRect();
-        
-        // 1. Draw Wires 
-        drawWire(ctx, r.x, r.y, r.x, r.y + r.h); 
-        drawWire(ctx, r.x, r.y, r.x + r.w, r.y); 
-        drawWire(ctx, r.x + r.w, r.y, r.x + r.w, r.y + r.h); 
-        drawWire(ctx, r.x, r.y + r.h, r.x + r.w, r.y + r.h); 
-
-        if (state.mode === 'parallel') {
-            drawWire(ctx, r.x + r.w/2, r.y, r.x + r.w/2, r.y + r.h);
-        }
-
-        // 2. Draw Components
-        // Battery
-        ctx.clearRect(r.x - 10, r.y + r.h/2 - 35, 20, 70); 
-        drawBattery(ctx, r.x, r.y + r.h/2);
-
-        // Switch
-        ctx.clearRect(r.x + r.w/4 - 30, r.y - 10, 60, 20); 
-        drawSwitch(ctx, r.x + r.w/4, r.y, state.isSwitchClosed);
-
-        const isPowered = state.isSwitchClosed;
-
-        if (state.mode === 'simple') {
-            ctx.clearRect(r.x + r.w - 10, r.y + r.h/2 - 25, 20, 50);
-            drawBulb(ctx, r.x + r.w, r.y + r.h/2, isPowered, 1.0);
-        } 
-        else if (state.mode === 'series') {
-            ctx.clearRect(r.x + r.w - 10, r.y + r.h/3 - 25, 20, 50);
-            drawBulb(ctx, r.x + r.w, r.y + r.h/3, isPowered, 0.5); 
-
-            ctx.clearRect(r.x + r.w - 10, r.y + (r.h/3)*2 - 25, 20, 50);
-            drawBulb(ctx, r.x + r.w, r.y + (r.h/3)*2, isPowered, 0.5); 
-        }
-        else if (state.mode === 'parallel') {
-            ctx.clearRect(r.x + r.w/2 - 10, r.y + r.h/2 - 25, 20, 50);
-            drawBulb(ctx, r.x + r.w/2, r.y + r.h/2, isPowered, 1.0);
-
-            ctx.clearRect(r.x + r.w - 10, r.y + r.h/2 - 25, 20, 50);
-            drawBulb(ctx, r.x + r.w, r.y + r.h/2, isPowered, 1.0);
-        }
-
-        // 3. Draw Electrons
-        updateElectrons(deltaTime);
-        state.electrons.forEach(p => {
-            const pos = getPositionOnRect(p.offset, r, p.loop);
-            const distBat = Math.hypot(pos.x - r.x, pos.y - (r.y + r.h/2));
-            const distSw = Math.hypot(pos.x - (r.x + r.w/4), pos.y - r.y);
-            
-            if (distBat > 30 && distSw > 30) {
-                 drawElectronParticle(ctx, pos.x, pos.y);
-            }
-        });
-
-        requestAnimationFrame(animate);
-    }
-
-    // Start
-    resizeCanvas();
+    // Initialize
     updateUI();
     requestAnimationFrame(animate);
 
